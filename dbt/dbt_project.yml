@@ -5,8 +5,10 @@ config-version: 2
 profile: retail_data_pipeline
 
 model-paths: ["models"]
-target-path: "target"
 clean-targets: ["target", "dbt_packages"]
+
+flags:
+  send_anonymous_usage_stats: false
 
 models:
   retail_data_pipeline:

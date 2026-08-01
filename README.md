@@ -47,7 +47,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Docker.
 git clone https://github.com/rriaz6601/retail-data-pipeline
 cd retail-data-pipeline
 uv sync
-docker compose up -d postgres
+docker compose up -d --wait postgres
 uv run python -m flows.pipeline_flow
 ```
 
@@ -55,11 +55,20 @@ This generates ~1000 online orders + ~580 POS transactions + 150 loyalty
 members, loads them into Postgres, builds every dbt model, runs all dbt
 tests, and checks that `fct_sales` has exactly one row per real sale.
 
+Note: dbt's schema-generation concatenates the profile's base schema (`dbt`)
+with each model's `+schema` config, so the mart doesn't actually land at
+`marts.fct_sales` — it lands at `dbt_marts.fct_sales`. Once the pipeline has
+run, you can query it directly:
+
+```sql
+select * from dbt_marts.fct_sales limit 10;
+```
+
 ## Running the tests
 
 ```bash
-uv run pytest                          # generator + flow unit tests
-docker compose up -d postgres          # required for the loader test
+uv run pytest                          # unit tests; also runs the loader integration test if postgres is up
+docker compose up -d --wait postgres          # required for the loader test
 uv run pytest tests/test_load_raw.py   # integration test
 cd dbt && DBT_PROFILES_DIR=./profiles uv run dbt test   # dbt tests
 ```

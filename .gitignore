@@ -7,3 +7,5 @@ dbt/logs/
 dbt/dbt_packages/
 .env
 .worktrees/
+dbt/profiles/.user.yml
+.pytest_cache/
