@@ -21,23 +21,24 @@ TABLES = {
 }
 
 
-def load_raw(csv_dir: Path, dsn: str) -> dict[str, int]:
+def load_raw(csv_dir: Path, dsn: str, schema: str = "raw") -> dict[str, int]:
     counts: dict[str, int] = {}
     with psycopg.connect(dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
-            cur.execute("CREATE SCHEMA IF NOT EXISTS raw")
+            cur.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
             for table, columns in TABLES.items():
-                cur.execute(f"DROP TABLE IF EXISTS raw.{table} CASCADE")
+                cur.execute(f"DROP TABLE IF EXISTS {schema}.{table} CASCADE")
                 cols_ddl = ", ".join(f'"{c}" TEXT' for c in columns)
-                cur.execute(f"CREATE TABLE raw.{table} ({cols_ddl})")
+                cur.execute(f"CREATE TABLE {schema}.{table} ({cols_ddl})")
 
                 csv_path = csv_dir / f"{table}.csv"
                 with csv_path.open() as f, cur.copy(
-                    f"COPY raw.{table} ({', '.join(columns)}) FROM STDIN WITH CSV HEADER"
+                    f"COPY {schema}.{table} ({', '.join(columns)}) "
+                    "FROM STDIN WITH (FORMAT csv, HEADER MATCH)"
                 ) as copy:
                     copy.write(f.read())
 
-                cur.execute(f"SELECT count(*) FROM raw.{table}")
+                cur.execute(f"SELECT count(*) FROM {schema}.{table}")
                 counts[table] = cur.fetchone()[0]
     return counts
 

@@ -1,4 +1,7 @@
-"""Integration test — requires `docker compose up -d postgres` first."""
+"""Integration test — requires `docker compose up -d postgres` first.
+
+Loads into `raw_test`, not `raw`, so this never touches (or drops-CASCADE)
+the pipeline's real `raw` schema and the dbt views built on top of it."""
 from pathlib import Path
 
 import psycopg
@@ -27,7 +30,7 @@ pytestmark = pytest.mark.skipif(
 def test_load_raw_creates_tables_with_correct_row_counts(tmp_path: Path):
     result = generate(tmp_path, seed=1, n_online_orders=100, n_pos_only=50, n_loyalty_members=30)
 
-    counts = load_raw(tmp_path, DSN)
+    counts = load_raw(tmp_path, DSN, schema="raw_test")
 
     assert counts["online_orders"] == result.online_orders
     assert counts["pos_transactions"] == result.pos_transactions

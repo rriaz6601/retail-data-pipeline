@@ -28,8 +28,8 @@ def generate_data(seed: int = 42) -> dict:
 
 
 @task
-def load_data(dsn: str = DEFAULT_DSN) -> dict:
-    return load_raw(DATA_DIR, dsn)
+def load_data(dsn: str = DEFAULT_DSN, schema: str = "raw") -> dict:
+    return load_raw(DATA_DIR, dsn, schema=schema)
 
 
 @task
