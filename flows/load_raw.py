@@ -27,7 +27,7 @@ def load_raw(csv_dir: Path, dsn: str) -> dict[str, int]:
         with conn.cursor() as cur:
             cur.execute("CREATE SCHEMA IF NOT EXISTS raw")
             for table, columns in TABLES.items():
-                cur.execute(f"DROP TABLE IF EXISTS raw.{table}")
+                cur.execute(f"DROP TABLE IF EXISTS raw.{table} CASCADE")
                 cols_ddl = ", ".join(f'"{c}" TEXT' for c in columns)
                 cur.execute(f"CREATE TABLE raw.{table} ({cols_ddl})")
 
