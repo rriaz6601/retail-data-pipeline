@@ -9,7 +9,7 @@ with candidates as (
         online.order_id,
         pos.txn_id,
         row_number() over (partition by online.order_id order by pos.txn_ts) as rn_per_order,
-        row_number() over (partition by pos.txn_id order by online.order_ts) as rn_per_txn
+        row_number() over (partition by pos.txn_id order by online.order_ts desc) as rn_per_txn
     from {{ ref('stg_pos_transactions') }} pos
     join {{ ref('stg_online_orders') }} online
         on pos.customer_email = online.customer_email
