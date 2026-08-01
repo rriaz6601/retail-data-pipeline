@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_online_orders
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_email
+        tests: [not_null]
+  - name: stg_pos_transactions
+    columns:
+      - name: txn_id
+        tests: [not_null, unique]
+      - name: customer_email
+        tests: [not_null]
+  - name: stg_loyalty_members
+    columns:
+      - name: member_id
+        tests: [not_null, unique]
+      - name: email
+        tests: [not_null, unique]

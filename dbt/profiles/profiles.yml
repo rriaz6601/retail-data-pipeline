@@ -1,0 +1,13 @@
+# Local-dev-only credentials matching docker-compose.yml — not real secrets.
+retail_data_pipeline:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 55432
+      user: retail
+      password: retail
+      dbname: retail
+      schema: dbt
+      threads: 4
