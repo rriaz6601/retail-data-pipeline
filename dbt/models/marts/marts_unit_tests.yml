@@ -1,0 +1,62 @@
+version: 2
+
+unit_tests:
+  - name: test_int_pos_matched_dedup
+    description: >
+      Exercises the actual dedup logic in int_pos_matched, which the
+      mart-level unique/not_null tests can't: a genuine pickup match should
+      be identified and appear in the output; a coincidental match on a
+      *non*-pickup order should be excluded purely by the fulfillment_type
+      filter (not by the ranking logic); and an online order with no
+      matching POS transaction at all should produce no output row.
+    model: int_pos_matched
+    given:
+      - input: ref('stg_online_orders')
+        rows:
+          - order_id: "WEB-100001"
+            customer_email: "alice@example.com"
+            order_ts: "2026-01-05 10:00:00"
+            sku: "SKU-0001"
+            quantity: 2
+            unit_price: 25.00
+            fulfillment_type: "pickup"
+          - order_id: "WEB-100002"
+            customer_email: "bob@example.com"
+            order_ts: "2026-01-10 10:00:00"
+            sku: "SKU-0002"
+            quantity: 1
+            unit_price: 15.00
+            fulfillment_type: "shipped"
+          - order_id: "WEB-100003"
+            customer_email: "carol@example.com"
+            order_ts: "2026-01-15 10:00:00"
+            sku: "SKU-0003"
+            quantity: 3
+            unit_price: 30.00
+            fulfillment_type: "pickup"
+      - input: ref('stg_pos_transactions')
+        rows:
+          # Genuine pickup match for WEB-100001 — same customer/sku/qty/price,
+          # POS scan happens ~23 hours later, well within the 2-day window.
+          - txn_id: "POS-200001"
+            customer_email: "alice@example.com"
+            txn_ts: "2026-01-06 09:00:00"
+            sku: "SKU-0001"
+            quantity: 2
+            unit_price: 25.00
+            store_id: "STORE-01"
+          # Coincidental collision with WEB-100002 — identical
+          # customer/sku/qty/price within the window, but the online order is
+          # 'shipped', not 'pickup', so this must NOT be treated as a match.
+          - txn_id: "POS-200002"
+            customer_email: "bob@example.com"
+            txn_ts: "2026-01-11 08:00:00"
+            sku: "SKU-0002"
+            quantity: 1
+            unit_price: 15.00
+            store_id: "STORE-02"
+          # No POS row at all for WEB-100003 — it's a pickup order that
+          # simply hasn't been (or won't be) scanned in-store.
+    expect:
+      rows:
+        - txn_id: "POS-200001"
